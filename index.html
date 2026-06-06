@@ -1,9 +1,16 @@
+Ah, my mistake! I saw the previous webcam code and totally missed that your new link was for an audio model instead of an image model. Audio models use a completely different set of TensorFlow libraries and require microphone access instead of camera access.
+
+Here is the fully updated code. I have swapped out the image recognition scripts for the audio ones, removed the webcam box, and updated the JavaScript to listen for sound instead of looking at pictures.
+
+Copy and paste this over everything inside your index.html file:
+
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fruit Classifier</title>
+    <title>Fruit Audio Classifier</title>
     
     <style>
         /* CSS Styling to make it look like a real website */
@@ -41,7 +48,7 @@
         }
 
         button {
-            background-color: #27ae60; /* Changed to a nice green for fruits */
+            background-color: #27ae60; /* Nice green */
             color: white;
             border: none;
             padding: 12px 24px;
@@ -58,20 +65,9 @@
             background-color: #2ecc71; 
         }
 
-        #webcam-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #e9ecef; 
-            min-height: 200px; 
-            align-items: center;
-        }
-
-        #webcam-container canvas {
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
         }
 
         #label-container {
@@ -94,65 +90,75 @@
 <body>
 
     <main class="app-card">
-        <h1>Fruit Classifier</h1>
-        <button type="button" onclick="init()">Start Camera</button>
-        <div id="webcam-container"></div>
+        <h1>Fruit Audio Classifier</h1>
+        <button id="start-btn" type="button" onclick="init()">Start Microphone</button>
         <div id="label-container"></div>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
 
     <script type="text/javascript">
-        // Your specific model link
+        // Your specific audio model link
         const URL = "https://teachablemachine.withgoogle.com/models/RfYC1FiD9/";
 
-        let model, webcam, labelContainer, maxPredictions;
+        async function createModel() {
+            const checkpointURL = URL + "model.json"; // model topology
+            const metadataURL = URL + "metadata.json"; // model metadata
+
+            const recognizer = speechCommands.create(
+                "BROWSER_FFT", // fourier transform type, not useful to change
+                undefined, // speech commands vocabulary feature, not useful for your models
+                checkpointURL,
+                metadataURL);
+
+            // check that model and metadata are loaded via HTTPS requests.
+            await recognizer.ensureModelLoaded();
+            return recognizer;
+        }
 
         async function init() {
-            const modelURL = URL + "model.json";
-            const metadataURL = URL + "metadata.json";
+            // Disable the button so the user doesn't click it twice while loading
+            const startBtn = document.getElementById("start-btn");
+            startBtn.innerText = "Loading Model...";
+            startBtn.disabled = true;
 
             try {
-                // Load the model and metadata from your Google link
-                model = await tmImage.load(modelURL, metadataURL);
-                maxPredictions = model.getTotalClasses();
+                const recognizer = await createModel();
+                const classLabels = recognizer.wordLabels(); // get class labels
+                const labelContainer = document.getElementById("label-container");
+                labelContainer.innerHTML = ""; // Clear existing labels
 
-                // Setup the webcam
-                const flip = true; 
-                webcam = new tmImage.Webcam(200, 200, flip); 
-                await webcam.setup(); 
-                await webcam.play();
-                window.requestAnimationFrame(loop);
-
-                // Add webcam to the screen
-                document.getElementById("webcam-container").appendChild(webcam.canvas);
-                
-                // Setup labels
-                labelContainer = document.getElementById("label-container");
-                labelContainer.innerHTML = ""; // Clear out previous labels if any
-                for (let i = 0; i < maxPredictions; i++) {
+                // Create a visual row for each class
+                for (let i = 0; i < classLabels.length; i++) {
                     labelContainer.appendChild(document.createElement("div"));
                 }
+
+                // Change button text to indicate it's listening
+                startBtn.innerText = "Listening...";
+
+                // Start listening to the microphone
+                recognizer.listen(result => {
+                    const scores = result.scores; // probability of prediction for each class
+
+                    // Update the labels with the live probability scores
+                    for (let i = 0; i < classLabels.length; i++) {
+                        const percentage = Math.round(scores[i] * 100);
+                        const classPrediction = classLabels[i] + ": " + percentage + "%";
+                        labelContainer.childNodes[i].innerHTML = classPrediction;
+                    }
+                }, {
+                    includeSpectrogram: true, // in case listen should return result.spectrogram
+                    probabilityThreshold: 0.75,
+                    invokeCallbackOnNoiseAndUnknown: true,
+                    overlapFactor: 0.50 // How often it checks the audio
+                });
+
             } catch (error) {
-                console.error("Error loading model:", error);
-                alert("Make sure your model link is correct and public!");
-            }
-        }
-
-        async function loop() {
-            webcam.update(); 
-            await predict();
-            window.requestAnimationFrame(loop);
-        }
-
-        async function predict() {
-            // predict can take in an image, video or canvas html element
-            const prediction = await model.predict(webcam.canvas);
-            for (let i = 0; i < maxPredictions; i++) {
-                const percentage = Math.round(prediction[i].probability * 100);
-                const classPrediction = prediction[i].className + ": " + percentage + "%";
-                labelContainer.childNodes[i].innerHTML = classPrediction;
+                console.error("Error loading audio model:", error);
+                alert("Make sure your model link is correct and public, and that you have granted microphone permissions!");
+                startBtn.innerText = "Start Microphone";
+                startBtn.disabled = false;
             }
         }
     </script>
