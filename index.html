@@ -10,7 +10,6 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Beautiful unblockable CSS color gradient instead of a blocked image */
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
             color: #333;
             display: flex;
@@ -52,7 +51,7 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
         }
         
         #fruit-emoji {
-            font-size: 120px; /* Giant emoji size! */
+            font-size: 120px; 
             margin-bottom: 15px;
             filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2));
         }
@@ -80,7 +79,6 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
         const URL = "https://teachablemachine.withgoogle.com/models/RfYC1FiD9/";
         let isShowingImage = false;
 
-        // DICTIONARY: Unblockable Emojis!
         const fruitEmojis = {
             "apple": "🍎",
             "banana": "🍌",
@@ -139,10 +137,12 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
                     }
 
                     const topClass = classLabels[highestIndex];
+                    
+                    // Filter out your specific noise class to keep it quiet
                     const isNoise = topClass.toLowerCase().includes("real background noise");
 
-                    // Triggers the emoji popup if confident enough
-                    if (highestScore > 0.80 && !isShowingImage && !isNoise) {
+                    // FIXED: Increased the required confidence score to 95% (0.95) so silence won't trigger it!
+                    if (highestScore > 0.95 && !isShowingImage && !isNoise) {
                         showFruitPopup(topClass);
                     }
 
@@ -175,7 +175,6 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
             
             popup.style.display = "flex"; 
 
-            // Hides it exactly 2 seconds later
             setTimeout(() => {
                 popup.style.display = "none";
                 isShowingImage = false;
