@@ -1,4 +1,25 @@
+Angel! Your school/network firewall is completely ruthless. It is blocking every single image website I throw at it, which is why you keep getting that broken image icon.
 
+Because the broken popup was showing up immediately, it was actually covering up your "Start Microphone" button, which is why it wasn't asking for your mic anymore! Furthermore, if your browser has already blocked the microphone once, it won't ask again automatically.
+
+The Ultimate Firewall-Proof Fix
+We are going to outsmart the firewall. Instead of trying to download pictures from the internet, we are going to use giant Emojis (🍎🍌🍉). Emojis are text, meaning it is literally impossible for your school's network to block them.
+
+I have also hardcoded the popup to stay completely hidden so it won't block your microphone button, and I replaced the blocked background image with a cool pink/green CSS color gradient.
+
+Step 1: Fix your Microphone Permissions
+Before pasting the code, ensure your browser hasn't permanently blocked your mic:
+
+Look at the top of your screen, next to your URL (https://...github.dev).
+
+Click the little Lock icon or Tune icon on the left side of the web address.
+
+Look for Microphone and make sure it is set to Allow. (If you had to change it, refresh the page!)
+
+Step 2: The New Code
+Copy and paste this. You will see giant fruit emojis instead of broken images, and the start button will be fully clickable!
+
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,22 +28,11 @@
     <title>Fruit Audio Classifier</title>
     
     <style>
-        /* CSS Styling */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            /* Fallback color in case the image is still blocked */
-            background-color: #a8e6cf; 
-            /* Wikimedia Commons fruit background */
-            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Culinary_fruits_front_view.jpg/1200px-Culinary_fruits_front_view.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            /* Beautiful unblockable CSS color gradient instead of a blocked image */
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
             color: #333;
             display: flex;
             align-items: center;
@@ -30,110 +40,52 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         .app-card {
-            background: rgba(255, 255, 255, 0.92);
+            background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.3); 
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2); 
             text-align: center;
             max-width: 450px;
             width: 100%;
             position: relative; 
             overflow: hidden;
-            backdrop-filter: blur(5px);
         }
-
-        h1 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            color: #2c3e50;
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
-        }
-
+        h1 { font-size: 1.5rem; margin-bottom: 20px; color: #2c3e50; }
         button {
-            background-color: #27ae60; 
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            margin-bottom: 20px;
-            width: 100%; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background-color: #27ae60; color: white; border: none;
+            padding: 12px 24px; font-size: 1rem; font-weight: bold;
+            border-radius: 8px; cursor: pointer; margin-bottom: 20px; width: 100%; 
         }
-
-        button:hover {
-            background-color: #2ecc71; 
-        }
-
-        button:disabled {
-            background-color: #95a5a6;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        #label-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
+        button:hover { background-color: #2ecc71; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        #label-container { display: flex; flex-direction: column; gap: 10px; }
         #label-container div {
-            background-color: rgba(236, 240, 241, 0.9);
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            color: #2c3e50;
-            border-left: 5px solid #27ae60; 
-            text-align: left;
+            background-color: #ecf0f1; padding: 12px; border-radius: 6px;
+            font-weight: bold; color: #2c3e50; border-left: 5px solid #27ae60; text-align: left;
         }
-
-        /* Dramatic Saved Fruit Popup Menu */
+        
+        /* Popup Menu */
         #fruit-popup {
-            display: none; 
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.98); z-index: 10;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-
-        #fruit-img {
-            width: 220px;
-            height: 220px;
-            object-fit: cover;
-            border-radius: 12px;
+        
+        #fruit-emoji {
+            font-size: 120px; /* Giant emoji size! */
             margin-bottom: 15px;
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-            border: 4px solid #27ae60;
-            background-color: #eee; /* Light gray behind the image while it loads */
+            filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2));
         }
-
-        #fruit-popup-text {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #27ae60;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        
+        #fruit-popup-text { font-size: 1.5rem; font-weight: bold; color: #27ae60; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
     <main class="app-card">
-        <div id="fruit-popup">
-            <img id="fruit-img" src="" alt="Saved Fruit">
+        <div id="fruit-popup" style="display: none;">
+            <div id="fruit-emoji">🍎</div>
             <div id="fruit-popup-text">Fruit Saved!</div>
         </div>
 
@@ -147,30 +99,23 @@
 
     <script type="text/javascript">
         const URL = "https://teachablemachine.withgoogle.com/models/RfYC1FiD9/";
-
         let isShowingImage = false;
 
-        // DICTIONARY: Using unblockable Wikipedia images and lowercase keys for safety
-        const fruitImages = {
-            "apple": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/400px-Red_Apple.jpg",
-            "banana": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Banana-Single.jpg/400px-Banana-Single.jpg",
-            "orange": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Orange-Fruit-Pieces.jpg/400px-Orange-Fruit-Pieces.jpg",
-            "strawberry": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/PerfectStrawberry.jpg/400px-PerfectStrawberry.jpg",
-            "grape": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Table_grapes_on_white.jpg/400px-Table_grapes_on_white.jpg",
-            "watermelon": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Watermelon_cross_section_on_white_background.png/400px-Watermelon_cross_section_on_white_background.png",
-            "default": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Culinary_fruits_front_view.jpg/400px-Culinary_fruits_front_view.jpg"
+        // DICTIONARY: Unblockable Emojis!
+        const fruitEmojis = {
+            "apple": "🍎",
+            "banana": "🍌",
+            "orange": "🍊",
+            "strawberry": "🍓",
+            "grape": "🍇",
+            "watermelon": "🍉",
+            "default": "🌟"
         };
 
         async function createModel() {
             const checkpointURL = URL + "model.json"; 
             const metadataURL = URL + "metadata.json"; 
-
-            const recognizer = speechCommands.create(
-                "BROWSER_FFT", 
-                undefined, 
-                checkpointURL,
-                metadataURL);
-
+            const recognizer = speechCommands.create("BROWSER_FFT", undefined, checkpointURL, metadataURL);
             await recognizer.ensureModelLoaded();
             return recognizer;
         }
@@ -190,7 +135,7 @@
                 for (let i = 0; i < rawClassLabels.length; i++) {
                     let labelName = rawClassLabels[i];
                     if (labelName === "Background Noise") {
-                        labelName = "Apple"; // Fixes default Teachable Machine label
+                        labelName = "Apple"; 
                     }
                     classLabels.push(labelName);
                     labelContainer.appendChild(document.createElement("div"));
@@ -200,7 +145,6 @@
 
                 recognizer.listen(result => {
                     const scores = result.scores; 
-
                     let highestIndex = 0;
                     let highestScore = 0;
 
@@ -218,7 +162,7 @@
                     const topClass = classLabels[highestIndex];
                     const isNoise = topClass.toLowerCase().includes("real background noise");
 
-                    // Trigger if >80% confident, not noise, and not on cooldown
+                    // Triggers the emoji popup if confident enough
                     if (highestScore > 0.80 && !isShowingImage && !isNoise) {
                         showFruitPopup(topClass);
                     }
@@ -231,8 +175,8 @@
                 });
 
             } catch (error) {
-                console.error("Error loading audio model:", error);
-                alert("Make sure your model link is correct and public, and that you have granted microphone permissions!");
+                console.error("Error:", error);
+                alert("Mic access denied or model failed to load. Please check browser permissions!");
                 startBtn.innerText = "Start Microphone";
                 startBtn.disabled = false;
             }
@@ -241,21 +185,18 @@
         function showFruitPopup(fruitName) {
             isShowingImage = true;
             const popup = document.getElementById("fruit-popup");
-            const img = document.getElementById("fruit-img");
+            const emojiDiv = document.getElementById("fruit-emoji");
             const text = document.getElementById("fruit-popup-text");
 
-            // Convert label to lowercase and trim spaces to ensure it matches our dictionary
             const safeName = fruitName.toLowerCase().trim();
-
-            // Look up the image, or fall back to "default"
-            const imageUrl = fruitImages[safeName] || fruitImages["default"];
+            const emoji = fruitEmojis[safeName] || fruitEmojis["default"];
             
-            img.src = imageUrl;
+            emojiDiv.innerText = emoji;
             text.innerText = `💥 ${fruitName} Saved!`;
             
             popup.style.display = "flex"; 
 
-            // Auto dismisses exactly 2 seconds later
+            // Hides it exactly 2 seconds later
             setTimeout(() => {
                 popup.style.display = "none";
                 isShowingImage = false;
