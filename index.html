@@ -1,4 +1,12 @@
-I am the destroyer of apples oranges and bananas if you do not say their name i will destroy them muhahahahahah - evil angel
+To make it feel truly instantaneous and smooth, we have to fix two things:
+
+The Brain (The Code): The overlapFactor in your code was set to 0.50, which means the AI was only checking the microphone twice a second. I bumped this up to 0.85, so it will now check your microphone almost 7 times a second for hyper-fast reaction times.
+
+The Look (The UI): Just showing numbers can look choppy. I upgraded your labels to include smooth, animated progress bars. As you speak, the bars will slide up and down fluidly in real-time.
+
+Here is the ultimate, hyper-smooth version. Paste this right over your index.html:
+
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,10 +45,45 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
         }
         button:hover { background-color: #2ecc71; }
         button:disabled { background-color: #95a5a6; cursor: not-allowed; }
-        #label-container { display: flex; flex-direction: column; gap: 10px; }
-        #label-container div {
-            background-color: #ecf0f1; padding: 12px; border-radius: 6px;
-            font-weight: bold; color: #2c3e50; border-left: 5px solid #27ae60; text-align: left;
+        
+        /* New Smooth Progress Bar Styles */
+        #label-container { display: flex; flex-direction: column; gap: 12px; }
+        .label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ecf0f1; 
+            padding: 10px 15px; 
+            border-radius: 6px;
+            border-left: 5px solid #27ae60;
+        }
+        .label-name {
+            font-weight: bold; 
+            color: #2c3e50;
+            width: 90px;
+            text-align: left;
+            text-transform: capitalize;
+        }
+        .progress-bg {
+            flex-grow: 1;
+            height: 12px;
+            background-color: #bdc3c7;
+            border-radius: 10px;
+            margin: 0 15px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #27ae60;
+            width: 0%;
+            /* This transition is the secret to making it look incredibly smooth */
+            transition: width 0.1s ease-out; 
+        }
+        .label-score {
+            font-weight: bold;
+            color: #2c3e50;
+            width: 45px;
+            text-align: right;
         }
         
         /* Popup Menu */
@@ -49,13 +92,11 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
             background: rgba(255, 255, 255, 0.98); z-index: 10;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        
         #fruit-emoji {
             font-size: 120px; 
             margin-bottom: 15px;
             filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2));
         }
-        
         #fruit-popup-text { font-size: 1.5rem; font-weight: bold; color: #27ae60; text-transform: uppercase; }
     </style>
 </head>
@@ -109,13 +150,25 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
                 labelContainer.innerHTML = ""; 
 
                 const classLabels = [];
+                
+                // Build the new UI rows with progress bars
                 for (let i = 0; i < rawClassLabels.length; i++) {
                     let labelName = rawClassLabels[i];
                     if (labelName === "Background Noise") {
                         labelName = "Apple"; 
                     }
                     classLabels.push(labelName);
-                    labelContainer.appendChild(document.createElement("div"));
+
+                    const row = document.createElement("div");
+                    row.className = "label-row";
+                    row.innerHTML = `
+                        <div class="label-name">${labelName}</div>
+                        <div class="progress-bg">
+                            <div class="progress-fill" id="fill-${i}"></div>
+                        </div>
+                        <div class="label-score" id="score-${i}">0%</div>
+                    `;
+                    labelContainer.appendChild(row);
                 }
 
                 startBtn.innerText = "Listening...";
@@ -127,8 +180,10 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
 
                     for (let i = 0; i < classLabels.length; i++) {
                         const percentage = Math.round(scores[i] * 100);
-                        const classPrediction = classLabels[i] + ": " + percentage + "%";
-                        labelContainer.childNodes[i].innerHTML = classPrediction;
+                        
+                        // Update the text AND the smooth progress bar fill
+                        document.getElementById(`score-${i}`).innerText = percentage + "%";
+                        document.getElementById(`fill-${i}`).style.width = percentage + "%";
 
                         if (scores[i] > highestScore) {
                             highestScore = scores[i];
@@ -137,12 +192,10 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
                     }
 
                     const topClass = classLabels[highestIndex];
-                    
-                    // Filter out your specific noise class to keep it quiet
                     const isNoise = topClass.toLowerCase().includes("real background noise");
 
-                    // FIXED: Increased the required confidence score to 95% (0.95) so silence won't trigger it!
-                    if (highestScore > 0.90 && !isShowingImage && !isNoise) {
+                    // 95% threshold to block out silence
+                    if (highestScore > 0.95 && !isShowingImage && !isNoise) {
                         showFruitPopup(topClass);
                     }
 
@@ -150,7 +203,8 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
                     includeSpectrogram: true, 
                     probabilityThreshold: 0.75,
                     invokeCallbackOnNoiseAndUnknown: true,
-                    overlapFactor: 0.50 
+                    // INCREASED OVERLAP FACTOR: Makes the AI check the mic much faster!
+                    overlapFactor: 0.85 
                 });
 
             } catch (error) {
