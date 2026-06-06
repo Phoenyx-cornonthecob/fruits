@@ -1,4 +1,3 @@
-Hi I am angel and i am the destroyer of fruits.... If you want these fruits to survive say their name...
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -33,6 +32,8 @@ Hi I am angel and i am the destroyer of fruits.... If you want these fruits to s
             text-align: center;
             max-width: 450px;
             width: 100%;
+            position: relative; /* Crucial for positioning the pop-up over the card */
+            overflow: hidden;
         }
 
         h1 {
@@ -42,7 +43,7 @@ Hi I am angel and i am the destroyer of fruits.... If you want these fruits to s
         }
 
         button {
-            background-color: #27ae60; /* Nice green */
+            background-color: #27ae60; /* Nice fruit green */
             color: white;
             border: none;
             padding: 12px 24px;
@@ -79,11 +80,51 @@ Hi I am angel and i am the destroyer of fruits.... If you want these fruits to s
             border-left: 5px solid #27ae60; 
             text-align: left;
         }
+
+        /* Dramatic Saved Fruit Popup Menu */
+        #fruit-popup {
+            display: none; /* Hidden by default */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.98);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #fruit-img {
+            width: 220px;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            border: 4px solid #27ae60;
+        }
+
+        #fruit-popup-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #27ae60;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
 
     <main class="app-card">
+        <div id="fruit-popup" style="display: none;">
+            <img id="fruit-img" src="" alt="Saved Fruit">
+            <div id="fruit-popup-text">Fruit Saved!</div>
+        </div>
+
         <h1>Fruit Audio Classifier</h1>
         <button id="start-btn" type="button" onclick="init()">Start Microphone</button>
         <div id="label-container"></div>
@@ -93,59 +134,75 @@ Hi I am angel and i am the destroyer of fruits.... If you want these fruits to s
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
 
     <script type="text/javascript">
-        // Your specific audio model link
         const URL = "https://teachablemachine.withgoogle.com/models/RfYC1FiD9/";
 
+        let isShowingImage = false; // Cooldown lock to keep it from glitching out
+
         async function createModel() {
-            const checkpointURL = URL + "model.json"; // model topology
-            const metadataURL = URL + "metadata.json"; // model metadata
+            const checkpointURL = URL + "model.json"; 
+            const metadataURL = URL + "metadata.json"; 
 
             const recognizer = speechCommands.create(
-                "BROWSER_FFT", // fourier transform type, not useful to change
-                undefined, // speech commands vocabulary feature, not useful for your models
+                "BROWSER_FFT", 
+                undefined, 
                 checkpointURL,
                 metadataURL);
 
-            // check that model and metadata are loaded via HTTPS requests.
             await recognizer.ensureModelLoaded();
             return recognizer;
         }
 
         async function init() {
-            // Disable the button so the user doesn't click it twice while loading
             const startBtn = document.getElementById("start-btn");
             startBtn.innerText = "Loading Model...";
             startBtn.disabled = true;
 
             try {
                 const recognizer = await createModel();
-                const classLabels = recognizer.wordLabels(); // get class labels
+                const classLabels = recognizer.wordLabels(); 
                 const labelContainer = document.getElementById("label-container");
-                labelContainer.innerHTML = ""; // Clear existing labels
+                labelContainer.innerHTML = ""; 
 
-                // Create a visual row for each class
                 for (let i = 0; i < classLabels.length; i++) {
                     labelContainer.appendChild(document.createElement("div"));
                 }
 
-                // Change button text to indicate it's listening
                 startBtn.innerText = "Listening...";
 
-                // Start listening to the microphone
                 recognizer.listen(result => {
-                    const scores = result.scores; // probability of prediction for each class
+                    const scores = result.scores; 
 
-                    // Update the labels with the live probability scores
+                    let highestIndex = 0;
+                    let highestScore = 0;
+
+                    // Update live accuracy bar updates
                     for (let i = 0; i < classLabels.length; i++) {
                         const percentage = Math.round(scores[i] * 100);
                         const classPrediction = classLabels[i] + ": " + percentage + "%";
                         labelContainer.childNodes[i].innerHTML = classPrediction;
+
+                        // Check which fruit sound matches the loudest
+                        if (scores[i] > highestScore) {
+                            highestScore = scores[i];
+                            highestIndex = i;
+                        }
                     }
+
+                    const topClass = classLabels[highestIndex];
+                    
+                    // Filter out standard background hums or noise words
+                    const isNoise = topClass.toLowerCase().includes("noise") || topClass.toLowerCase().includes("background");
+
+                    // Trigger if the match is confident (>80%), not idle noise, and screen isn't already frozen
+                    if (highestScore > 0.80 && !isShowingImage && !isNoise) {
+                        showFruitPopup(topClass);
+                    }
+
                 }, {
-                    includeSpectrogram: true, // in case listen should return result.spectrogram
+                    includeSpectrogram: true, 
                     probabilityThreshold: 0.75,
                     invokeCallbackOnNoiseAndUnknown: true,
-                    overlapFactor: 0.50 // How often it checks the audio
+                    overlapFactor: 0.50 
                 });
 
             } catch (error) {
@@ -154,6 +211,26 @@ Hi I am angel and i am the destroyer of fruits.... If you want these fruits to s
                 startBtn.innerText = "Start Microphone";
                 startBtn.disabled = false;
             }
+        }
+
+        // Handles displaying the popup and taking it down 2 seconds later
+        function showFruitPopup(fruitName) {
+            isShowingImage = true;
+            const popup = document.getElementById("fruit-popup");
+            const img = document.getElementById("fruit-img");
+            const text = document.getElementById("fruit-popup-text");
+
+            // Pulls a fresh image instantly using the target fruit label word
+            img.src = `https://loremflickr.com/300/300/${encodeURIComponent(fruitName)}`;
+            text.innerText = `💥 ${fruitName} Saved!`;
+            
+            popup.style.display = "flex"; // Reveals screen layout
+
+            // Auto dismisses exactly 2 seconds (2000ms) later
+            setTimeout(() => {
+                popup.style.display = "none";
+                isShowingImage = false;
+            }, 2000);
         }
     </script>
 </body>
