@@ -15,7 +15,11 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f7f6; 
+            /* Added a fun, high-quality fruit background */
+            background-image: url('https://images.unsplash.com/photo-1490818387583-1b5f222129d1?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: #333;
             display: flex;
             align-items: center;
@@ -25,25 +29,28 @@
         }
 
         .app-card {
-            background: white;
+            /* Changed to slightly transparent white so the background peeks through */
+            background: rgba(255, 255, 255, 0.92);
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1); 
+            box-shadow: 0 12px 24px rgba(0,0,0,0.3); 
             text-align: center;
             max-width: 450px;
             width: 100%;
-            position: relative; /* Crucial for positioning the pop-up over the card */
+            position: relative; 
             overflow: hidden;
+            backdrop-filter: blur(5px); /* Adds a cool frosted glass effect */
         }
 
         h1 {
             font-size: 1.5rem;
             margin-bottom: 20px;
             color: #2c3e50;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
         }
 
         button {
-            background-color: #27ae60; /* Nice fruit green */
+            background-color: #27ae60; 
             color: white;
             border: none;
             padding: 12px 24px;
@@ -54,6 +61,7 @@
             transition: background-color 0.3s ease;
             margin-bottom: 20px;
             width: 100%; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         button:hover {
@@ -63,6 +71,7 @@
         button:disabled {
             background-color: #95a5a6;
             cursor: not-allowed;
+            box-shadow: none;
         }
 
         #label-container {
@@ -72,10 +81,10 @@
         }
 
         #label-container div {
-            background-color: #ecf0f1;
+            background-color: rgba(236, 240, 241, 0.9);
             padding: 12px;
             border-radius: 6px;
-            font-weight: 500;
+            font-weight: bold;
             color: #2c3e50;
             border-left: 5px solid #27ae60; 
             text-align: left;
@@ -83,7 +92,7 @@
 
         /* Dramatic Saved Fruit Popup Menu */
         #fruit-popup {
-            display: none; /* Hidden by default */
+            display: none; 
             position: absolute;
             top: 0;
             left: 0;
@@ -120,7 +129,7 @@
 <body>
 
     <main class="app-card">
-        <div id="fruit-popup" style="display: none;">
+        <div id="fruit-popup">
             <img id="fruit-img" src="" alt="Saved Fruit">
             <div id="fruit-popup-text">Fruit Saved!</div>
         </div>
@@ -136,7 +145,20 @@
     <script type="text/javascript">
         const URL = "https://teachablemachine.withgoogle.com/models/RfYC1FiD9/";
 
-        let isShowingImage = false; // Cooldown lock to keep it from glitching out
+        let isShowingImage = false;
+
+        // DICTIONARY: Map your fruit names to high-quality images here.
+        // If you add new fruits to your model, add their exact name and an image link here!
+        const fruitImages = {
+            "Apple": "https://images.unsplash.com/photo-1560806887-1e4cd0b6faa6?w=400&q=80",
+            "Banana": "https://images.unsplash.com/photo-1571501478200-8d96f9a0d8e9?w=400&q=80",
+            "Orange": "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=400&q=80",
+            "Strawberry": "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&q=80",
+            "Grape": "https://images.unsplash.com/photo-1596365548074-e85d4d3d52cb?w=400&q=80",
+            "Watermelon": "https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?w=400&q=80",
+            // A generic fruit basket fallback just in case it detects a fruit not listed above
+            "Default": "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80"
+        };
 
         async function createModel() {
             const checkpointURL = URL + "model.json"; 
@@ -159,11 +181,18 @@
 
             try {
                 const recognizer = await createModel();
-                const classLabels = recognizer.wordLabels(); 
+                const rawClassLabels = recognizer.wordLabels(); 
                 const labelContainer = document.getElementById("label-container");
                 labelContainer.innerHTML = ""; 
 
-                for (let i = 0; i < classLabels.length; i++) {
+                // Create our fixed labels list (changing "Background Noise" to "Apple")
+                const classLabels = [];
+                for (let i = 0; i < rawClassLabels.length; i++) {
+                    let labelName = rawClassLabels[i];
+                    if (labelName === "Background Noise") {
+                        labelName = "Apple"; // Fixes the Teachable Machine default error
+                    }
+                    classLabels.push(labelName);
                     labelContainer.appendChild(document.createElement("div"));
                 }
 
@@ -175,13 +204,12 @@
                     let highestIndex = 0;
                     let highestScore = 0;
 
-                    // Update live accuracy bar updates
+                    // Loop through and update the screen with our fixed class labels
                     for (let i = 0; i < classLabels.length; i++) {
                         const percentage = Math.round(scores[i] * 100);
                         const classPrediction = classLabels[i] + ": " + percentage + "%";
                         labelContainer.childNodes[i].innerHTML = classPrediction;
 
-                        // Check which fruit sound matches the loudest
                         if (scores[i] > highestScore) {
                             highestScore = scores[i];
                             highestIndex = i;
@@ -190,10 +218,10 @@
 
                     const topClass = classLabels[highestIndex];
                     
-                    // Filter out standard background hums or noise words
-                    const isNoise = topClass.toLowerCase().includes("noise") || topClass.toLowerCase().includes("background");
+                    // Filter out the actual background noise you recorded
+                    const isNoise = topClass.toLowerCase().includes("real background noise");
 
-                    // Trigger if the match is confident (>80%), not idle noise, and screen isn't already frozen
+                    // Trigger if the match is confident (>80%), is NOT the real noise, and isn't on cooldown
                     if (highestScore > 0.80 && !isShowingImage && !isNoise) {
                         showFruitPopup(topClass);
                     }
@@ -213,20 +241,21 @@
             }
         }
 
-        // Handles displaying the popup and taking it down 2 seconds later
         function showFruitPopup(fruitName) {
             isShowingImage = true;
             const popup = document.getElementById("fruit-popup");
             const img = document.getElementById("fruit-img");
             const text = document.getElementById("fruit-popup-text");
 
-            // Pulls a fresh image instantly using the target fruit label word
-            img.src = `https://loremflickr.com/300/300/${encodeURIComponent(fruitName)}`;
+            // Look up the specific image in our dictionary. If it doesn't exist, use the Default image.
+            const imageUrl = fruitImages[fruitName] || fruitImages["Default"];
+            
+            img.src = imageUrl;
             text.innerText = `💥 ${fruitName} Saved!`;
             
-            popup.style.display = "flex"; // Reveals screen layout
+            popup.style.display = "flex"; 
 
-            // Auto dismisses exactly 2 seconds (2000ms) later
+            // Auto dismisses exactly 2 seconds later
             setTimeout(() => {
                 popup.style.display = "none";
                 isShowingImage = false;
