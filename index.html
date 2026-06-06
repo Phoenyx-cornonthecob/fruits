@@ -142,7 +142,7 @@ I am the destroyer of apples oranges and bananas if you do not say their name i 
                     const isNoise = topClass.toLowerCase().includes("real background noise");
 
                     // FIXED: Increased the required confidence score to 95% (0.95) so silence won't trigger it!
-                    if (highestScore > 0.95 && !isShowingImage && !isNoise) {
+                    if (highestScore > 0.90 && !isShowingImage && !isNoise) {
                         showFruitPopup(topClass);
                     }
 
